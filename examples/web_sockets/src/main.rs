@@ -93,55 +93,53 @@ async fn main() -> anyhow::Result<()> {
     let state = AppState { messages_tx };
 
     let app = std::rc::Rc::new(
-        picoserve::Router::new()
-            .route(
-                "/",
-                get_service(picoserve::response::File::html(include_str!("index.html"))),
-            )
-            .nest_service(
-                "/static",
-                const {
-                    picoserve::response::Directory {
-                        files: &[
-                            (
-                                "index.css",
-                                picoserve::response::File::css(include_str!("index.css")),
-                            ),
-                            (
-                                "index.js",
-                                picoserve::response::File::css(include_str!("index.js")),
-                            ),
-                        ],
-                        ..picoserve::response::Directory::DEFAULT
+        picoserve::Router::from_service(
+            const {
+                picoserve::response::Directory {
+                    files: &[
+                        (
+                            "",
+                            picoserve::response::File::html(include_str!("index.html")),
+                        ),
+                        (
+                            "index.css",
+                            picoserve::response::File::css(include_str!("index.css")),
+                        ),
+                        (
+                            "index.js",
+                            picoserve::response::File::css(include_str!("index.js")),
+                        ),
+                    ],
+                    ..picoserve::response::Directory::DEFAULT
+                }
+            },
+        )
+        .route(
+            "/index.css",
+            get_service(picoserve::response::File::css(include_str!("index.css"))),
+        )
+        .route(
+            "/index.js",
+            get_service(picoserve::response::File::javascript(include_str!(
+                "index.js"
+            ))),
+        )
+        .route(
+            "/ws",
+            get(async move |upgrade: ws::WebSocketUpgrade| {
+                if let Some(protocols) = upgrade.protocols() {
+                    log::info!("Protocols:");
+                    for protocol in protocols {
+                        log::info!("\t{protocol}");
                     }
-                },
-            )
-            .route(
-                "/index.css",
-                get_service(picoserve::response::File::css(include_str!("index.css"))),
-            )
-            .route(
-                "/index.js",
-                get_service(picoserve::response::File::javascript(include_str!(
-                    "index.js"
-                ))),
-            )
-            .route(
-                "/ws",
-                get(async move |upgrade: ws::WebSocketUpgrade| {
-                    if let Some(protocols) = upgrade.protocols() {
-                        log::info!("Protocols:");
-                        for protocol in protocols {
-                            log::info!("\t{protocol}");
-                        }
-                    }
+                }
 
-                    upgrade
-                        .on_upgrade_using_state(WebsocketHandler)
-                        .with_protocol("messages")
-                }),
-            )
-            .with_state(state),
+                upgrade
+                    .on_upgrade_using_state(WebsocketHandler)
+                    .with_protocol("messages")
+            }),
+        )
+        .with_state(state),
     );
 
     let socket = tokio::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, port)).await?;

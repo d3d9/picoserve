@@ -5,14 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.1] 2026-09-21
+
+### Fixed
+
+- [`Directory`](https://docs.rs/picoserve/0.20.1/picoserve/response/fs/struct.Directory.html) returns `404 NOT FOUND` on an unhandled method on an unhandled path, not `405 METHOD_NOT_ALLOWED`.
+
 ## [0.20.0] 2026-08-30
 
 ### Breaking
 
 - The `Write` trait used throughout `picoserve` has been replaced from [`embedded-io-async::Write`](https://docs.rs/embedded-io-async/0.7.0/embedded_io_async/) to a new `picoserve::io::Write` trait.
 - Server-Sent Events and WebSockets no longer automatically flush the connection after writing a message.
-- [`sse::EventData`](https://docs.rs/picoserve/latest/picoserve/response/sse/trait.EventData.html) now writes to a [`sse::EventDataWriter`](https://docs.rs/picoserve/latest/picoserve/response/sse/struct.EventDataWriter.html), 
-- Map types are now by default serialized as JSON objects. The representation can be configured, see the [`json`](https://docs.rs/picoserve/latest/picoserve/response/json/index.html) module.
+- [`sse::EventData`](https://docs.rs/picoserve/0.20.0/picoserve/response/sse/trait.EventData.html) now writes to a [`sse::EventDataWriter`](https://docs.rs/picoserve/0.20.0/picoserve/response/sse/struct.EventDataWriter.html), 
+- Map types are now by default serialized as JSON objects. The representation can be configured, see the [`json`](https://docs.rs/picoserve/0.20.0/picoserve/response/json/index.html) module.
 
 ### Changed
 
@@ -20,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- [`Response::with_content_type`](https://docs.rs/picoserve/latest/picoserve/response/struct.Response.html), which overrides the `Content-Type` derived from the body without appending a second header.
+- [`Response::with_content_type`](https://docs.rs/picoserve/0.20.0/picoserve/response/struct.Response.html), which overrides the `Content-Type` derived from the body without appending a second header.
 
 ### Fixed
 

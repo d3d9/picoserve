@@ -4,6 +4,7 @@ use core::fmt;
 
 use crate::{
     ResponseSent,
+    futures::Either,
     io::{Read, Write},
     request::Path,
     routing::{PathRouter, PathRouterService, RequestHandler, RequestHandlerService},
@@ -227,38 +228,38 @@ impl Directory {
 }
 
 impl<State, CurrentPathParameters> PathRouterService<State, CurrentPathParameters> for Directory {
-    async fn call_path_router_service<R: Read, W: super::ResponseWriter<Error = R::Error>>(
+    fn call_path_router_service<R: Read, W: super::ResponseWriter<Error = R::Error>>(
         &self,
         state: &State,
         current_path_parameters: CurrentPathParameters,
         path: Path<'_>,
         request: crate::request::Request<'_, R>,
         response_writer: W,
-    ) -> Result<ResponseSent, W::Error> {
-        if !request.parts.method().eq_ignore_ascii_case("get") {
-            return crate::routing::MethodNotAllowed
-                .call_request_handler(state, current_path_parameters, request, response_writer)
-                .await;
-        }
-
+    ) -> impl Future<Output = Result<ResponseSent, W::Error>> {
         if let Some(file) = self.matching_file(path) {
-            file.call_request_handler_service(
-                state,
-                current_path_parameters,
-                request,
-                response_writer,
-            )
-            .await
-        } else {
-            crate::routing::NotFound
-                .call_path_router(
+            Either::First(if request.parts.method().eq_ignore_ascii_case("get") {
+                Either::First(file.call_request_handler_service(
                     state,
                     current_path_parameters,
-                    path,
                     request,
                     response_writer,
-                )
-                .await
+                ))
+            } else {
+                Either::Second(crate::routing::MethodNotAllowed.call_request_handler(
+                    state,
+                    current_path_parameters,
+                    request,
+                    response_writer,
+                ))
+            })
+        } else {
+            Either::Second(crate::routing::NotFound.call_path_router(
+                state,
+                current_path_parameters,
+                path,
+                request,
+                response_writer,
+            ))
         }
     }
 }
