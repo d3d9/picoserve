@@ -23,7 +23,6 @@ embassy-sync = { workspace = true }
 embassy-time = { workspace = true }
 embassy-usb-logger = { workspace = true }
 embassy-usb = { workspace = true }
-embassy-usb-host = { workspace = true }
 embassy-usb-driver = { workspace = true }
 log = { workspace = true }
 panic-persist = { workspace = true }
